@@ -1,35 +1,36 @@
 import streamlit as st
-from auth import login
-from auth import logout
-from dashboard import show_dashboard
-from employees import show_employees
-from salary import show_salary
+from openai import OpenAI
+import os
+from dotenv import load_dotenv
 
-# init session state
-if "logged_in" not in st.session_state:
-    st.session_state.logged_in = False
-    st.session_state.user = None
+load_dotenv()
+client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
-if "page" not in st.session_state:
-    st.session_state.page = "Dashboard"
+st.title("AI Chatbot")
 
-# login page
-if not st.session_state.logged_in:
-    login()
+if "messages" not in st.session_state:
+    st.session_state.messages = []
 
-st.sidebar.title(f"Welcome, {st.session_state.user}!")
-page = st.sidebar.radio("Go to", ["Dashboard", "Employees", "Salary"])
+# Display chat history
+for msg in st.session_state.messages:
+    with st.chat_message(msg["role"]):
+        st.write(msg["content"])
 
-if st.sidebar.button("Logout",logout):
-    logout()
+# User input
+user_input = st.chat_input("Ask something...")
 
-# ---------------- ROUTING ----------------
-if page == "Dashboard":
-    show_dashboard()
+if user_input:
+    # Save user message
+    st.session_state.messages.append({"role": "user", "content": user_input})
 
-elif page == "Employees":
-    show_employees()
+    # Call OpenAI
+    response = client.chat.completions.create(
+        model="gpt-4o-mini",
+        messages=st.session_state.messages
+    )
 
-elif page == "Salary":
-    show_salary()
-    
+    assistant_msg = response.choices[0].message.content
+
+    st.session_state.messages.append({"role": "assistant", "content": assistant_msg})
+
+    st.rerun()

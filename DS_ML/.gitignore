@@ -1,0 +1,14 @@
+# environment variables
+.env
+
+# Python cache
+__pycache__/
+*.pyc
+
+# virtual environment
+myvenv/
+.env/
+
+# other
+.ipynb_checkpoints/
+datasets/
